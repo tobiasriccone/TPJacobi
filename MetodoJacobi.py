@@ -22,12 +22,13 @@ def getXAMostrar(x):
     vector = "["
     primerElem = True
     for lista in x:
-        if primerElem is False:
-            vector += ", "
         for elem in lista:
-            vector += str(int(elem))
+            nro = str(round(float(elem), 3))
+            if primerElem:
+                vector += nro
+            else:
+                vector += ",  " + nro
             primerElem = False
-    vector = vector[:-2]
     vector += "]"
     return vector
 
@@ -35,6 +36,7 @@ def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
     toleranciaIncompletaLabel.place_forget()
     iteracionesIncompletasLabel.place_forget()
     validarTolerancia(tol, alturaLabel)
+    cantNrosTol = len(str(tol).replace(".", ""))
     validarIteracionesMax(iteracionesMax, alturaLabel)
     getElementoPorTexto(Button, "Calcular X").config(state=DISABLED)
     inputTol.config(state=DISABLED)
@@ -48,11 +50,11 @@ def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
         xAux = x
         x = np.dot(diagInv, np.dot(-lu, x)) + np.dot(diagInv, b)
         xAMostrar = getXAMostrar(x)
-        dist = round(np.linalg.norm(x - xAux), 10)
+        dist = round(np.linalg.norm(x - xAux), cantNrosTol - 1)
         Label(content_frame, text=i + 1, font=("Arial", 11)).grid(row=i + 1, column=0, padx=70,pady=10)
         Label(content_frame, text=xAMostrar, font=("Arial", 11)).grid(row=i + 1, column=1, padx=70,pady=10)
         Label(content_frame, text=dist, font=("Arial", 11)).grid(row=i + 1, column=2, padx=70,pady=10)
-        if dist <= round(float(tol), 10):
+        if dist <= round(float(tol), cantNrosTol - 1):
             break
     Label(root, text=f"Vector X aproximado, obtenido en la iteración {i+1}: {xAMostrar}", font=("Arial", 11)).place(x=80, y=alturaLabel)
 
