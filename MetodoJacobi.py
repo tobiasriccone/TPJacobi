@@ -12,12 +12,34 @@ def validarIteracionesMax(iteracionesMax, alturaLabel):
         iteracionesIncompletasLabel.place(x=80, y=alturaLabel)
         raise Exception("Número iteraciones incompleto")
 
+def armarFrame(alturaLabel):
+    seccion.grid(row=1, column=0, padx=35, pady=alturaLabel, sticky="w")
+    Label(content_frame, text="Iteraciones", font=("Arial", 11, "bold")).grid(row=0, column=0, padx=70, pady=10)
+    Label(content_frame, text="Vector Aprox.", font=("Arial", 11, "bold")).grid(row=0, column=1, padx=70, pady=10)
+    Label(content_frame, text="Distancia", font=("Arial", 11, "bold")).grid(row=0, column=2, padx=70, pady=10)
+
+def getXAMostrar(x):
+    vector = "["
+    primerElem = True
+    for lista in x:
+        if primerElem is False:
+            vector += ", "
+        for elem in lista:
+            vector += str(int(elem))
+            primerElem = False
+    vector = vector[:-2]
+    vector += "]"
+    return vector
+
 def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
     toleranciaIncompletaLabel.place_forget()
     iteracionesIncompletasLabel.place_forget()
     validarTolerancia(tol, alturaLabel)
     validarIteracionesMax(iteracionesMax, alturaLabel)
     getElementoPorTexto(Button, "Calcular X").config(state=DISABLED)
+    inputTol.config(state=DISABLED)
+    inputIterMax.config(state=DISABLED)
+    armarFrame(alturaLabel+40)
     diag = np.diag(np.diag(a))
     lu = a - diag
     x = x0
@@ -25,22 +47,14 @@ def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
         diagInv = np.linalg.inv(diag)
         xAux = x
         x = np.dot(diagInv, np.dot(-lu, x)) + np.dot(diagInv, b)
-        dist = np.linalg.norm(x - xAux)
-        xAMostrar = ""
-        for fila in x:
-            for elem in fila:
-                xAMostrar += f"   {round(elem, 2)}"
-        alturaLabel += 35
-        Label(root, text=f"Iteración {i + 1}", font=("Arial", 11)).place(x=posX, y=alturaLabel)
-        alturaLabel += 25
-        Label(root, text=f"Vector X = {xAMostrar}", font=("Arial", 11)).place(x=posX, y=alturaLabel)
-        alturaLabel += 25
-        Label(root, text=f"Distancia = {round(dist, 4)}", font=("Arial", 11)).place(x=posX, y=alturaLabel)
-        alturaLabel += 25
-        Label(root, text=f"---------", font=("Arial", 11)).place(x=posX, y=alturaLabel)
-        if dist < float(tol):
-            return x
-    return x
+        xAMostrar = getXAMostrar(x)
+        dist = round(np.linalg.norm(x - xAux), 10)
+        Label(content_frame, text=i + 1, font=("Arial", 11)).grid(row=i + 1, column=0, padx=70,pady=10)
+        Label(content_frame, text=xAMostrar, font=("Arial", 11)).grid(row=i + 1, column=1, padx=70,pady=10)
+        Label(content_frame, text=dist, font=("Arial", 11)).grid(row=i + 1, column=2, padx=70,pady=10)
+        if dist <= round(float(tol), 10):
+            break
+    Label(root, text=f"Vector X aproximado, obtenido en la iteración {i+1}: {xAMostrar}", font=("Arial", 11)).place(x=80, y=alturaLabel)
 
 def getElementoPorTexto(tipoElemento, texto):
     for widget in root.winfo_children():
@@ -95,7 +109,7 @@ def calcular(listaInputsMatriz, listaInputsVector, listaInputsSemilla, alturaLab
     inputTol.place(x=155, y=alturaLabel+35, height=25)
     ingreseIterMaxLabel.place(x=posX, y=alturaLabel+70)
     inputIterMax.place(x=235, y=alturaLabel+70, width=30, height=25)
-    Button(root, text="Calcular X", command=lambda: jacobi(matrizA, vector, semilla, inputTol.get(), inputIterMax.get(), alturaLabel+100)).place(x=posX, y=alturaLabel+100)
+    Button(root, text="Calcular X", command=lambda: jacobi(matrizA, vector, semilla, inputTol.get(), inputIterMax.get(), alturaLabel+105)).place(x=posX, y=alturaLabel+105)
 
 def crearInputs(fil, col, x0, y0):
     listaFilas = []
@@ -115,7 +129,7 @@ def crearInputs(fil, col, x0, y0):
 
 def validarDim(dim):
     dimInvalidaLabel.place_forget()
-    if dim != "" and dim != "-" and dim.startswith(".") is False and dim != "-." and 5 > int(dim) > 0:
+    if dim != "" and dim != "-" and dim.startswith(".") is False and dim != "-." and 4 > int(dim) > 0:
         inputDim.config(state=DISABLED)
         getElementoPorTexto(Button, "Siguiente").config(state=DISABLED)
     else:
@@ -141,17 +155,31 @@ def teclaValidaPositiva(input):
 def teclaValida(input):
     return re.match(r"^(?:-)?\d*(?:\.\d*)?$", input) is not None
 
+def on_canvas_configure(event):
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
 def inicio():
     Label(root, text="TP Jacobi - Métodos Numéricos", font=("Arial", 16, "bold")).place(x=posX, y=10)
     Label(root, text="Grupo 08 conformado por Riccone y Nicotra", font=("Arial", 12, "bold")).place(x=posX, y=45)
     Label(root, text="------------------------------------", font=("Arial", 11)).place(x=posX, y=75)
-    Label(root, text="Ingrese la dimensión de la Matriz cuadrada a resolver (1-4):", font=("Arial", 11)).place(x=posX, y=105)
+    Label(root, text="Ingrese la dimensión de la Matriz cuadrada a resolver (1-3):", font=("Arial", 11)).place(x=posX, y=105)
     inputDim.place(x=405, y=105, width=30, height=25)
     Button(root, text="Siguiente", command=ingresarMatriz).place(x=445, y=103)
 
 root = Tk()
 root.geometry("800x600")
+root.resizable(False, False)
 root.title("Método Jacobi")
+
+seccion = LabelFrame(root, text="Convergencia")
+canvas = Canvas(seccion, width=700, height=120)
+canvas.grid(row=0, column=0, sticky="nsew")
+scrollbar = Scrollbar(seccion, orient="vertical", command=canvas.yview)
+scrollbar.grid(row=0, column=1, sticky="ns")
+canvas.configure(yscrollcommand=scrollbar.set)
+content_frame = Frame(canvas)
+canvas.create_window((0, 0), window=content_frame, anchor="nw")
+canvas.bind("<Configure>", on_canvas_configure)
 
 posX = 10
 inputDim = Entry(root, validate="key", validatecommand=(root.register(teclaValida), '%P'))
