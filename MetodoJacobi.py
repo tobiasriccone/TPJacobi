@@ -1,6 +1,7 @@
 import numpy as np
 from tkinter import *
 import re
+import matplotlib.pyplot as plt
 
 def validarTolerancia(tol, alturaLabel):
     if tol.startswith(".") or tol == "":
@@ -32,6 +33,14 @@ def getXAMostrar(x):
     vector += "]"
     return vector
 
+def verGrafico(listaIteraciones, listaConvergencia):
+    plt.figure()
+    plt.bar(listaIteraciones, listaConvergencia)
+    plt.title('Gráfico de Convergencia')
+    plt.xlabel('Iteraciones')
+    plt.ylabel('Distancia')
+    plt.show()
+
 def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
     toleranciaIncompletaLabel.place_forget()
     iteracionesIncompletasLabel.place_forget()
@@ -41,22 +50,27 @@ def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
     getElementoPorTexto(Button, "Calcular X").config(state=DISABLED)
     inputTol.config(state=DISABLED)
     inputIterMax.config(state=DISABLED)
-    armarFrame(alturaLabel+40)
+    armarFrame(alturaLabel+70)
     diag = np.diag(np.diag(a))
     lu = a - diag
     x = x0
+    listaConvergencia = []
+    listaIteraciones = []
     for i in range(int(iteracionesMax)):
         diagInv = np.linalg.inv(diag)
         xAux = x
         x = np.dot(diagInv, np.dot(-lu, x)) + np.dot(diagInv, b)
         xAMostrar = getXAMostrar(x)
         dist = round(np.linalg.norm(x - xAux), cantNrosTol - 1)
+        listaIteraciones.append(i+1)
+        listaConvergencia.append(dist)
         Label(content_frame, text=i + 1, font=("Arial", 11)).grid(row=i + 1, column=0, padx=70,pady=10)
         Label(content_frame, text=xAMostrar, font=("Arial", 11)).grid(row=i + 1, column=1, padx=70,pady=10)
         Label(content_frame, text=dist, font=("Arial", 11)).grid(row=i + 1, column=2, padx=70,pady=10)
         if dist <= round(float(tol), cantNrosTol - 1):
             break
     Label(root, text=f"Vector X aproximado, obtenido en la iteración {i+1}: {xAMostrar}", font=("Arial", 11)).place(x=80, y=alturaLabel)
+    Button(root, text="Ver Gráfico", command=lambda: verGrafico(listaIteraciones, listaConvergencia)).place(x=posX, y=alturaLabel + 35)
 
 def getElementoPorTexto(tipoElemento, texto):
     for widget in root.winfo_children():
@@ -169,7 +183,7 @@ def inicio():
     Button(root, text="Siguiente", command=ingresarMatriz).place(x=445, y=103)
 
 root = Tk()
-root.geometry("800x600")
+root.geometry("800x650")
 root.resizable(False, False)
 root.title("Método Jacobi")
 
