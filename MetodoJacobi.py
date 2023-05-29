@@ -130,9 +130,9 @@ def calcular(listaInputsMatriz, listaInputsVector, listaInputsSemilla, alturaLab
 def crearInputs(fil, col, x0, y0):
     listaFilas = []
     x = x0
-    for fila in range(fil):
+    for _ in range(fil):
         listaElementos = []
-        for columna in range(col):
+        for _ in range(col):
             input = Entry(root, validate="key", validatecommand=(root.register(teclaValida), '%P'))
             input.place(x=x, y=y0, width=30, height=25)
             listaElementos.append(input)
