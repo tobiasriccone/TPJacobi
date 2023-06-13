@@ -6,11 +6,13 @@ import matplotlib.pyplot as plt
 def validarTolerancia(tol, alturaLabel):
     if tol.startswith(".") or tol == "":
         toleranciaIncompletaLabel.place(x=80, y=alturaLabel)
+        inputTol.config(bg="#FFAAAA")
         raise Exception("Tolerancia incompleta")
 
 def validarIteracionesMax(iteracionesMax, alturaLabel):
     if iteracionesMax == "":
         iteracionesIncompletasLabel.place(x=80, y=alturaLabel)
+        inputIterMax.config(bg="#FFAAAA")
         raise Exception("Número iteraciones incompleto")
 
 def armarFrame(alturaLabel):
@@ -24,7 +26,8 @@ def getXAMostrar(x):
     primerElem = True
     for lista in x:
         for elem in lista:
-            nro = str(round(float(elem), 3))
+            nro = float(elem)
+            nro = "{:.1e}".format(nro).replace("e-0", "e-").replace("e+0", "e+").replace("e0", "e") if round(nro, 4) == -0.0000 or round(nro, 4) == 0.0000 else str(round(nro, 4))
             if primerElem:
                 vector += nro
             else:
@@ -44,6 +47,8 @@ def verGrafico(listaIteraciones, listaConvergencia):
 def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
     toleranciaIncompletaLabel.place_forget()
     iteracionesIncompletasLabel.place_forget()
+    inputIterMax.config(bg="white")
+    inputTol.config(bg="white")
     validarTolerancia(tol, alturaLabel)
     cantNrosTol = len(str(tol).replace(".", ""))
     validarIteracionesMax(iteracionesMax, alturaLabel)
@@ -64,13 +69,14 @@ def jacobi(a, b, x0, tol, iteracionesMax, alturaLabel):
         dist = round(np.linalg.norm(x - xAux), cantNrosTol - 1)
         listaIteraciones.append(i+1)
         listaConvergencia.append(dist)
+        distAMostrar = "{:.1e}".format(dist).replace("e-0", "e-").replace("e+0", "e+").replace("e0", "e") if round(dist, 4) == -0.0000 or round(dist, 4) == 0.0000 else round(dist, 4)
         Label(content_frame, text=i + 1, font=("Arial", 11)).grid(row=i + 1, column=0, padx=70,pady=10)
         Label(content_frame, text=xAMostrar, font=("Arial", 11)).grid(row=i + 1, column=1, padx=70,pady=10)
-        Label(content_frame, text=dist, font=("Arial", 11)).grid(row=i + 1, column=2, padx=70,pady=10)
+        Label(content_frame, text=distAMostrar, font=("Arial", 11)).grid(row=i + 1, column=2, padx=70,pady=10)
         if dist <= round(float(tol), cantNrosTol - 1):
             break
     Label(root, text=f"Vector X aproximado, obtenido en la iteración {i+1}: {xAMostrar}", font=("Arial", 11)).place(x=80, y=alturaLabel)
-    Button(root, text="Ver Gráfico", command=lambda: verGrafico(listaIteraciones, listaConvergencia)).place(x=posX, y=alturaLabel + 35)
+    Button(root, text="Ver Gráfico", command=lambda: verGrafico(listaIteraciones, listaConvergencia), bg="#A2FFA2").place(x=posX, y=alturaLabel + 35)
 
 def getElementoPorTexto(tipoElemento, texto):
     for widget in root.winfo_children():
@@ -93,9 +99,11 @@ def validarMatrizParaJacobi(matriz, alturaLabel):
             raise Exception("La matriz no es diagonal dominante")
     matrizValidaLabel.place(x=70, y=alturaLabel)
 
-def validarElemMatriz(valor, alturaLabel):
+def validarElemMatriz(elemento, alturaLabel):
+    valor = elemento.get()
     if valor == "" or valor == "-" or valor.startswith(".") or valor.startswith("-."):
         matrizIncompletaLabel.place(x=70, y=alturaLabel)
+        elemento.config(bg="#FFAAAA")
         raise Exception("Matriz incompleta")
 
 def obtenerMatrizDesdeInputs(listaFilasMatriz, alturaLabel):
@@ -104,9 +112,9 @@ def obtenerMatrizDesdeInputs(listaFilasMatriz, alturaLabel):
     j = 0
     for fila in listaFilasMatriz:
         for elemento in fila:
-            valor = elemento.get()
-            validarElemMatriz(valor, alturaLabel)
-            matriz[i][j] = valor
+            elemento.config(bg="white")
+            validarElemMatriz(elemento, alturaLabel)
+            matriz[i][j] = elemento.get()
             j += 1
         j = 0
         i += 1
@@ -123,6 +131,7 @@ def calcular(listaInputsMatriz, listaInputsVector, listaInputsSemilla, alturaLab
     deshabilitarInputsMatrices([listaInputsMatriz, listaInputsVector, listaInputsSemilla])
     ingreseTolLabel.place(x=posX, y=alturaLabel+35)
     inputTol.place(x=155, y=alturaLabel+35, height=25)
+    ejemploToleranciaLabel.place(x=285, y=alturaLabel+35)
     ingreseIterMaxLabel.place(x=posX, y=alturaLabel+70)
     inputIterMax.place(x=235, y=alturaLabel+70, width=30, height=25)
     Button(root, text="Calcular X", command=lambda: jacobi(matrizA, vector, semilla, inputTol.get(), inputIterMax.get(), alturaLabel+105)).place(x=posX, y=alturaLabel+105)
@@ -145,11 +154,12 @@ def crearInputs(fil, col, x0, y0):
 
 def validarDim(dim):
     dimInvalidaLabel.place_forget()
-    if dim != "" and dim != "-" and dim.startswith(".") is False and dim != "-." and 4 > int(dim) > 0:
+    if dim != "" and "." not in dim and 4 > int(dim) > 0:
         inputDim.config(state=DISABLED)
         getElementoPorTexto(Button, "Siguiente").config(state=DISABLED)
     else:
         dimInvalidaLabel.place(x=posX, y=135)
+        inputDim.config(bg="#FFAAAA")
         raise Exception("Dimension inválida")
 
 def ingresarMatriz():
@@ -181,6 +191,7 @@ def inicio():
     Label(root, text="Ingrese la dimensión de la Matriz cuadrada a resolver (1-3):", font=("Arial", 11)).place(x=posX, y=105)
     inputDim.place(x=405, y=105, width=30, height=25)
     Button(root, text="Siguiente", command=ingresarMatriz).place(x=445, y=103)
+    Label(root, text="Debe ser un número entero", font=("Arial", 9), fg="gray").place(x=515, y=105)
 
 root = Tk()
 root.geometry("800x650")
@@ -201,14 +212,15 @@ posX = 10
 inputDim = Entry(root, validate="key", validatecommand=(root.register(teclaValida), '%P'))
 dimInvalidaLabel = Label(root, text="Dimension inválida, reintente", font=("Arial", 11), fg="red")
 matrizIncompletaLabel = Label(root, text="Matriz incompleta", font=("Arial", 11), fg="red")
-matrizInvalidaLabel = Label(root, text="Matriz no diagonal dominante", font=("Arial", 11), fg="red")
+matrizInvalidaLabel = Label(root, text="Este programa requiere una matríz diagonal dominante, reingrese", font=("Arial", 11), fg="red")
 matrizValidaLabel = Label(root, text="Matriz diagonal dominante", font=("Arial", 11), fg="green")
 ingreseTolLabel = Label(root, text="Ingrese la tolerancia:", font=("Arial", 11))
 inputTol = Entry(root, validate="key", validatecommand=(root.register(teclaValidaPositiva), '%P'))
 ingreseIterMaxLabel = Label(root, text="Ingrese las iteraciones máximas:", font=("Arial", 11))
 inputIterMax = Entry(root, validate="key", validatecommand=(root.register(teclaValidaEnteroPositivo), '%P'))
-toleranciaIncompletaLabel = Label(root, text="Tolerancia incompleta", font=("Arial", 11), fg="red")
-iteracionesIncompletasLabel = Label(root, text="Número iteraciones máximas incompleto", font=("Arial", 11), fg="red")
+toleranciaIncompletaLabel = Label(root, text="Tolerancia incompleta, reingrese con el formato del ejemplo", font=("Arial", 11), fg="red")
+iteracionesIncompletasLabel = Label(root, text="Número iteraciones máximas incompleto, reingrese", font=("Arial", 11), fg="red")
+ejemploToleranciaLabel = Label(root, text="Ejemplo:  0.00001", font=("Arial", 9), fg="gray")
 inicio()
 
 root.mainloop()
